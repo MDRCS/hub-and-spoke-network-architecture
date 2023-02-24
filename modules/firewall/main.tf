@@ -1,9 +1,3 @@
-locals {
-  prefix    = "az-firewall"
-  fw_name   = "tcm-labs-azfw"
-  fw_policy = "tcm-labs-fw-policy"
-  fw_location = "eastus"
-}
 
 resource "azurerm_firewall_policy" "fw_policy" {
   name                = local.fw_policy
@@ -45,7 +39,7 @@ resource "azurerm_firewall" "fw" {
   management_ip_configuration {
     name                 = "mgmt_ipconfig"
     subnet_id            = azurerm_subnet.hub_firewall_mgmt.id
-    public_ip_address_id = azurerm_public_ip.fw-mgmt-ip.id 
+    public_ip_address_id = azurerm_public_ip.fw-mgmt-ip.id
   }
 
   timeouts {
