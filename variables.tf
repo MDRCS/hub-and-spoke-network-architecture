@@ -1,9 +1,4 @@
 locals {
-  prefix-hub-vnet         = "hub-vnet"
-  prefix-hub-nva         = "hub-nva"
-  hub-nva-resource-group = "hub-nva-rg"
-}
-locals {
   prefix-hub         = "hub"
   prefix-hub-nva         = "hub-nva"
   prefix-spoke1         = "spoke1"
@@ -15,35 +10,27 @@ locals {
   shared-key         = "4-v3ry-53cr37-1p53c-5h4r3d-k3y"
 }
 
-locals {
-  spoke2-resource-group = "spoke2-vnet-rg"
-  prefix-spoke2         = "spoke2"
-}
-
-variable "hub_nva_resource_group_name" {
-  description = "Resource Group Name"
-}
-
-variable "hub_vnet_resource_group_name" {
-  description = "Resource Group Name"
-}
-
 variable "location" {
   description = "Location of the network"
+  default     = "eastus"
 }
 
 variable "username" {
   description = "Username for Virtual Machines"
+  default     = "azureuser"
 }
 
 variable "password" {
   description = "Password for Virtual Machines"
+  default     = "PasSWord-123"
 }
 
 variable "vmsize" {
   description = "Size of the VMs"
+  default     = "Standard_DS1_v2"
 }
 
 variable "my_ip" {
   description = "My Laptop Public IP Address"
+  default     = data.external.my_ip.result.ip
 }

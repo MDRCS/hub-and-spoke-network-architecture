@@ -15,30 +15,47 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "hub-nva-rg" {
-  name     = "${local.prefix-hub-nva}-rg"
-  location = local.hub-nva-location
+  name     = local.hub-nva-resource_group 
+  location = var.location
 
-  tags = {
-    environment = local.prefix-hub-nva
-  }
+  # tags = {
+  #   environment = local.prefix-hub-nva
+  # }
 }
 resource "azurerm_resource_group" "hub-vnet-rg" {
-  name     = local.hub-resource-group
-  location = local.hub-location
+  name     = local.hub-vnet-resource-group
+  location = var.location
 }
 
 resource "azurerm_resource_group" "spoke1-vnet-rg" {
   name     = local.spoke1-resource-group
-  location = local.spoke1-location
+  location = var.location
 }
 
 
 resource "azurerm_resource_group" "spoke2-vnet-rg" {
   name     = local.spoke2-resource-group
-  location = local.spoke2-location
+  location = var.location
 }
 
 module "firewall" {
-  
-  
+  source = "./modules/firewall"
+  resource_group_name = azurerm_resource_group.hub-vnet-rg.name
+  location = var.location
 }
+
+module "virtual_network" {
+  source = "./modules/virtual_network"
+  resource_group_name = azurerm_resource_group.hub-vnet-rg.name
+  location = var.location
+}
+
+module "virtual_machine" {
+  source = "./modules/virtual_machine"
+  hub_nva_resource_group_name = azurerm_resource_group.hub-nva-rg.name
+  hub_vnet_resource_group_name = azurerm_resource_group.hub-vnet-rg.name
+  location = var.location
+  username = var.username
+  password = var.password
+}
+

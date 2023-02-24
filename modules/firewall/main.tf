@@ -1,43 +1,42 @@
 
 resource "azurerm_firewall_policy" "fw_policy" {
-  name                = local.fw_policy
-  resource_group_name = azurerm_resource_group.hub-vnet-rg.name
-  location            = azurerm_resource_group.hub-vnet-rg.location
+  name                = "${local.prefix}-fw-policy"
+  resource_group_name = var.resource_group_name
+  location            = var.location
 }
 
 resource "azurerm_public_ip" "fw_ip" {
   name                = "${local.prefix}-fw-ip"
-  location            = azurerm_resource_group.hub-vnet-rg.location
-  resource_group_name = azurerm_resource_group.hub-vnet-rg.name
+  resource_group_name = var.resource_group_name
+  location            = var.location
   allocation_method   = "Static"
   sku                 = "Standard"
 }
 
 resource "azurerm_public_ip" "fw-mgmt-ip" {
   name                = "${local.prefix}-fw-mgmt-ip"
-  location            = azurerm_resource_group.hub-vnet-rg.location
-  resource_group_name = azurerm_resource_group.hub-vnet-rg.name
+  resource_group_name = var.resource_group_name
+  location            = var.location
   allocation_method   = "Static"
   sku                 = "Standard"
 }
 
 resource "azurerm_firewall" "fw" {
-  name                = local.fw_name
-  location            = azurerm_resource_group.hub-vnet-rg.location
-  resource_group_name = azurerm_resource_group.hub-vnet-rg.name
+  name                = "${local.prefix}"
+  resource_group_name = var.resource_group_name
+  location            = var.location
   firewall_policy_id  = azurerm_firewall_policy.fw_policy.id
   sku_name            = "AZFW_VNet"
   sku_tier            = "Standard"
 
   ip_configuration {
-    name                 = "ipconfig"
+    name                 = "${local.prefix}-ipconfig"
     subnet_id            = azurerm_subnet.hub_firewall.id
     public_ip_address_id = azurerm_public_ip.fw_ip.id
   }
 
-  # On Azure Free-Tier we are limited to 4 public ip that we can create
   management_ip_configuration {
-    name                 = "mgmt_ipconfig"
+    name                 = "${local.prefix}-mgmt_ipconfig"
     subnet_id            = azurerm_subnet.hub_firewall_mgmt.id
     public_ip_address_id = azurerm_public_ip.fw-mgmt-ip.id
   }
@@ -81,7 +80,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw_rules_allow" {
     rule {
       name                  = "allow_my_ip_address"
       protocols             = ["TCP", "UDP", "ICMP"]
-      source_addresses      = [data.external.my_ip.result.ip]
+      source_addresses      = [var.my_ip]
       destination_addresses = ["*"]
       destination_ports     = ["*"]
     }
@@ -126,7 +125,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw_rules_allow" {
     rule {
       name                = "jumphost_rdp"
       protocols           = ["TCP"]
-      source_addresses    = [data.external.my_ip.result.ip]
+      source_addresses    = [var.my_ip]
       destination_address = azurerm_public_ip.fw_ip.ip_address
       destination_ports   = ["3387"]
       translated_address  = "10.0.4.4"
