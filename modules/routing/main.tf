@@ -1,7 +1,7 @@
 resource "azurerm_route_table" "hub-gateway-rt" {
-  name                          = "hub-gateway-rt"
-  location                      = azurerm_resource_group.hub-nva-rg.location
-  resource_group_name           = azurerm_resource_group.hub-nva-rg.name
+  name                          = "${local.hub-gateway}-rt"
+  location                      = var.location
+  resource_group_name           = var.hub_nva_resource_group_name
   disable_bgp_route_propagation = false
 
   route {
@@ -30,9 +30,9 @@ resource "azurerm_route_table" "hub-gateway-rt" {
     next_hop_type  = "Internet" # To Allow Hub to communicate with outside resources
   }
 
-  tags = {
-    environment = local.prefix-hub-nva
-  }
+  #   tags = {
+  #     environment = local.prefix-hub-nva
+  #   }
 }
 
 resource "azurerm_subnet_route_table_association" "hub-gateway-rt-hub-vnet-gateway-subnet" {
@@ -42,9 +42,9 @@ resource "azurerm_subnet_route_table_association" "hub-gateway-rt-hub-vnet-gatew
 }
 
 resource "azurerm_route_table" "spoke1-rt" {
-  name                          = "spoke1-rt"
-  location                      = azurerm_resource_group.hub-nva-rg.location
-  resource_group_name           = azurerm_resource_group.hub-nva-rg.name
+  name                          = "${local.prefix-spoke1}-rt"
+  location                      = var.location
+  resource_group_name           = var.hub_nva_resource_group_name
   disable_bgp_route_propagation = false
 
   route {
@@ -60,9 +60,9 @@ resource "azurerm_route_table" "spoke1-rt" {
     next_hop_type  = "Internet" # To Allow Spoke 1 to communicate with outside resources
   }
 
-  tags = {
-    environment = local.prefix-hub-nva
-  }
+  #   tags = {
+  #     environment = local.prefix-hub-nva
+  #   }
 }
 
 resource "azurerm_subnet_route_table_association" "spoke1-rt-spoke1-vnet-mgmt" {
@@ -78,9 +78,9 @@ resource "azurerm_subnet_route_table_association" "spoke1-rt-spoke1-vnet-workloa
 }
 
 resource "azurerm_route_table" "spoke2-rt" {
-  name                          = "spoke2-rt"
-  location                      = azurerm_resource_group.hub-nva-rg.location
-  resource_group_name           = azurerm_resource_group.hub-nva-rg.name
+  name                          = "${local.prefix-spoke2}-rt"
+  resource_group_name           = var.hub_nva_resource_group_name
+  location                      = var.location
   disable_bgp_route_propagation = false
 
   route {
@@ -96,9 +96,9 @@ resource "azurerm_route_table" "spoke2-rt" {
     next_hop_type  = "Internet" # To Allow Spoke 2 to communicate with outside resources
   }
 
-  tags = {
-    environment = local.prefix-hub-nva
-  }
+  #   tags = {
+  #     environment = local.prefix-hub-nva
+  #   }
 }
 
 resource "azurerm_subnet_route_table_association" "spoke2-rt-spoke2-vnet-mgmt" {

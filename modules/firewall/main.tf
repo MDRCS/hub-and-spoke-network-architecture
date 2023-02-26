@@ -22,7 +22,7 @@ resource "azurerm_public_ip" "fw-mgmt-ip" {
 }
 
 resource "azurerm_firewall" "fw" {
-  name                = "${local.prefix}"
+  name                = local.prefix
   resource_group_name = var.resource_group_name
   location            = var.location
   firewall_policy_id  = azurerm_firewall_policy.fw_policy.id

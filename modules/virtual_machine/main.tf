@@ -1,16 +1,16 @@
-# Hub -> Network Security Group, Public IP, Network Interface and Virtual Machine.
-resource "azurerm_public_ip" "hub-public-ip" {
+# Hub NVA -> Network Security Group, Public IP, Network Interface and Virtual Machine.
+resource "azurerm_public_ip" "hub-nva-public-ip" {
   name                = "${local.prefix-hub-nva}-public-ip"
-  location            = azurerm_resource_group.hub-nva-rg.location
-  resource_group_name = azurerm_resource_group.hub-nva-rg.name
+  resource_group_name = var.hub_nva_resource_group_name
+  location             = var.location
 
   allocation_method = "Dynamic"
 }
 
 resource "azurerm_network_interface" "hub-nva-nic" {
   name                 = "${local.prefix-hub-nva}-nic"
-  location             = azurerm_resource_group.hub-nva-rg.location
-  resource_group_name  = azurerm_resource_group.hub-nva-rg.name
+  resource_group_name = var.hub_nva_resource_group_name
+  location             = var.location
   enable_ip_forwarding = true
 
   ip_configuration {
@@ -21,16 +21,16 @@ resource "azurerm_network_interface" "hub-nva-nic" {
     public_ip_address_id          = azurerm_public_ip.hub-public-ip.id
   }
 
-  tags = {
-    environment = local.prefix-hub-nva
-  }
+#   tags = {
+#     environment = local.prefix-hub-nva
+#   }
 }
 
 # Create Network Security Group and rule
-resource "azurerm_network_security_group" "hub-nsg" {
+resource "azurerm_network_security_group" "hub-nva-nsg" {
   name                = "${local.prefix-hub-nva}-nsg"
-  location            = azurerm_resource_group.hub-nva-rg.location
-  resource_group_name = azurerm_resource_group.hub-nva-rg.name
+  resource_group_name = var.hub_nva_resource_group_name
+  location             = var.location
 
   security_rule {
     name                       = "SSH"
@@ -40,7 +40,7 @@ resource "azurerm_network_security_group" "hub-nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = data.external.my_ip.result.ip
+    source_address_prefix      = var.my_ip
     destination_address_prefix = "*"
   }
 
@@ -54,23 +54,23 @@ resource "azurerm_network_security_group" "hub-nsg" {
     source_port_range          = "*"
     destination_port_range     = "*"
     source_address_prefix      = "*"
-    destination_address_prefix = data.external.my_ip.result.ip
+    destination_address_prefix = var.my_ip
   }
 
-  tags = {
-    environment = local.prefix-hub-nva
-  }
+#   tags = {
+#     environment = local.prefix-hub-nva
+#   }
 }
 
 resource "azurerm_subnet_network_security_group_association" "mgmt-nsg-association" {
-  subnet_id                 = azurerm_subnet.hub-mgmt.id
-  network_security_group_id = azurerm_network_security_group.hub-nsg.id
+  subnet_id                 = azurerm_subnet.hub-nva-mgmt.id
+  network_security_group_id = azurerm_network_security_group.hub-nva-nsg.id
 }
 
 resource "azurerm_virtual_machine" "hub-nva-vm" {
   name                  = "${local.prefix-hub-nva}-vm"
-  location              = azurerm_resource_group.hub-nva-rg.location
-  resource_group_name   = azurerm_resource_group.hub-nva-rg.name
+  resource_group_name = var.hub_nva_resource_group_name
+  location             = var.location
   network_interface_ids = [azurerm_network_interface.hub-nva-nic.id]
   vm_size               = var.vmsize
 
@@ -82,7 +82,7 @@ resource "azurerm_virtual_machine" "hub-nva-vm" {
   }
 
   storage_os_disk {
-    name              = "myosdisk1"
+    name              = "${local.prefix-hub-nva}-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -98,13 +98,13 @@ resource "azurerm_virtual_machine" "hub-nva-vm" {
     disable_password_authentication = false
   }
 
-  tags = {
-    environment = local.prefix-hub-nva
-  }
+#   tags = {
+#     environment = local.prefix-hub-nva
+#   }
 }
 
 resource "azurerm_virtual_machine_extension" "enable-routes" {
-  name                 = "enable-iptables-routes"
+  name                 = "${local.prefix-hub-nva}-enable-iptables-routes"
   virtual_machine_id   = azurerm_virtual_machine.hub-nva-vm.id
   publisher            = "Microsoft.Azure.Extensions"
   type                 = "CustomScript"
@@ -120,34 +120,35 @@ resource "azurerm_virtual_machine_extension" "enable-routes" {
     }
 SETTINGS
 
-  tags = {
-    environment = local.prefix-hub-nva
-  }
+#   tags = {
+#     environment = local.prefix-hub-nva
+#   }
 }
 
-resource "azurerm_network_interface" "hub-nic" {
-  name                 = "${local.prefix-hub}-nic"
-  location             = azurerm_resource_group.hub-vnet-rg.location
-  resource_group_name  = azurerm_resource_group.hub-vnet-rg.name
+# Hub VNET -> Network Security Group, Public IP, Network Interface and Virtual Machine.
+resource "azurerm_network_interface" "hub-vnet-nic" {
+  name                 = "${local.prefix-hub-vnet}-nic"
+  resource_group_name  = var.hub_vnet_resource_group_name
+  location             = var.location
   enable_ip_forwarding = true
 
   ip_configuration {
-    name                          = local.prefix-hub
+    name                          = local.prefix-hub-vnet
     subnet_id                     = azurerm_subnet.hub-mgmt.id
     private_ip_address_allocation = "Dynamic"
   }
 
-  tags = {
-    environment = local.prefix-hub
-  }
+#   tags = {
+#     environment = local.prefix-hub
+#   }
 }
 
 #Virtual Machine
-resource "azurerm_virtual_machine" "hub-vm" {
-  name                  = "${local.prefix-hub}-vm"
-  location              = azurerm_resource_group.hub-vnet-rg.location
-  resource_group_name   = azurerm_resource_group.hub-vnet-rg.name
-  network_interface_ids = [azurerm_network_interface.hub-nic.id]
+resource "azurerm_virtual_machine" "hub-vnet-vm" {
+  name                  = "${local.prefix-hub-vnet}-vm"
+  resource_group_name  = var.hub_vnet_resource_group_name
+  location             = var.location
+  network_interface_ids = [azurerm_network_interface.hub-vnet-nic.id]
   vm_size               = var.vmsize
 
   storage_image_reference {
@@ -158,14 +159,14 @@ resource "azurerm_virtual_machine" "hub-vm" {
   }
 
   storage_os_disk {
-    name              = "myosdisk1"
+    name              = "${local.prefix-hub-vnet}-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
   }
 
   os_profile {
-    computer_name  = "${local.prefix-hub}-vm"
+    computer_name  = "${local.prefix-hub-vnet}-vm"
     admin_username = var.username
     admin_password = var.password
   }
@@ -174,25 +175,25 @@ resource "azurerm_virtual_machine" "hub-vm" {
     disable_password_authentication = false
   }
 
-  tags = {
-    environment = local.prefix-hub
-  }
+#   tags = {
+#     environment = local.prefix-hub
+#   }
 }
 
 
 # Spoke 1 -> Network Security Group, Public IP, Network Interface and Virtual Machine.
 resource "azurerm_public_ip" "spoke-1-public-ip" {
   name                = "${local.prefix-spoke1}-public-ip"
-  location            = azurerm_resource_group.spoke1-vnet-rg.location
-  resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
+  location            = var.location
+  resource_group_name = var.spoke1_vnet_resource_group_name
   allocation_method   = "Dynamic"
 }
 
 
 resource "azurerm_network_interface" "spoke1-nic" {
   name                 = "${local.prefix-spoke1}-nic"
-  location             = azurerm_resource_group.spoke1-vnet-rg.location
-  resource_group_name  = azurerm_resource_group.spoke1-vnet-rg.name
+  location             = var.location
+  resource_group_name  = var.spoke1_vnet_resource_group_name
   enable_ip_forwarding = true
 
   ip_configuration {
@@ -206,8 +207,8 @@ resource "azurerm_network_interface" "spoke1-nic" {
 resource "azurerm_network_security_group" "spoke-1-nsg" {
   # """ Create Network Security Group and rule to Allow Inbound/Outbound Traffic """
   name                = "${local.prefix-spoke1}-nsg"
-  location            = azurerm_resource_group.spoke1-vnet-rg.location
-  resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
+  location            = var.location
+  resource_group_name       = var.spoke1_vnet_resource_group_name
 
   security_rule {
     name                       = "SSH"
@@ -217,7 +218,7 @@ resource "azurerm_network_security_group" "spoke-1-nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = data.external.my_ip.result.ip
+    source_address_prefix      = var.my_ip
     destination_address_prefix = "*"
   }
 
@@ -231,18 +232,18 @@ resource "azurerm_network_security_group" "spoke-1-nsg" {
     source_port_range          = "*"
     destination_port_range     = "*"
     source_address_prefix      = "*"
-    destination_address_prefix = data.external.my_ip.result.ip
+    destination_address_prefix = var.my_ip
   }
 
-  tags = {
-    environment = local.prefix-spoke1
-  }
+#   tags = {
+#     environment = local.prefix-spoke1
+#   }
 }
 
 resource "azurerm_virtual_machine" "spoke1-vm" {
   name                  = "${local.prefix-spoke1}-vm"
-  location              = azurerm_resource_group.spoke1-vnet-rg.location
-  resource_group_name   = azurerm_resource_group.spoke1-vnet-rg.name
+  location              = var.location
+  resource_group_name   = var.spoke1_vnet_resource_group_name
   network_interface_ids = [azurerm_network_interface.spoke1-nic.id]
   vm_size               = var.vmsize
 
@@ -254,7 +255,7 @@ resource "azurerm_virtual_machine" "spoke1-vm" {
   }
 
   storage_os_disk {
-    name              = "myosdisk1"
+    name              = "${local.prefix-spoke1}-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -270,24 +271,17 @@ resource "azurerm_virtual_machine" "spoke1-vm" {
     disable_password_authentication = false
   }
 
-  tags = {
-    environment = local.prefix-spoke1
-  }
+#   tags = {
+#     environment = local.prefix-spoke1
+#   }
 }
 
-# 
-
-locals {
-  spoke2-location       = "eastus"
-  spoke2-resource-group = "spoke2-vnet-rg"
-  prefix-spoke2         = "spoke2"
-}
 
 # Create Network Security Group and rule to Allow Inbound/Outbound Traffic
 resource "azurerm_network_security_group" "spoke-2-nsg" {
   name                = "${local.prefix-spoke2}-nsg"
-  location            = azurerm_resource_group.spoke1-vnet-rg.location
-  resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
+  location            = var.location
+  resource_group_name       = var.spoke2_vnet_resource_group_name
 
   security_rule {
     name                       = "SSH"
@@ -297,7 +291,7 @@ resource "azurerm_network_security_group" "spoke-2-nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "22"
-    source_address_prefix      = data.external.my_ip.result.ip
+    source_address_prefix      = var.my_ip
     destination_address_prefix = "*"
   }
 
@@ -311,25 +305,25 @@ resource "azurerm_network_security_group" "spoke-2-nsg" {
     source_port_range          = "*"
     destination_port_range     = "*"
     source_address_prefix      = "*"
-    destination_address_prefix = data.external.my_ip.result.ip
+    destination_address_prefix = var.my_ip
   }
 
-  tags = {
-    environment = local.prefix-spoke2
-  }
+#   tags = {
+#     environment = local.prefix-spoke2
+#   }
 }
 
 resource "azurerm_public_ip" "spoke-2-public-ip" {
   name                = "${local.prefix-spoke2}-public-ip"
-  location            = azurerm_resource_group.spoke2-vnet-rg.location
-  resource_group_name = azurerm_resource_group.spoke2-vnet-rg.name
+  location            = var.location
+  resource_group_name = var.spoke2_vnet_resource_group_name
   allocation_method   = "Dynamic"
 }
 
 resource "azurerm_network_interface" "spoke2-nic" {
   name                 = "${local.prefix-spoke2}-nic"
-  location             = azurerm_resource_group.spoke2-vnet-rg.location
-  resource_group_name  = azurerm_resource_group.spoke2-vnet-rg.name
+  location             = var.location
+  resource_group_name  = var.spoke2_vnet_resource_group_name
   enable_ip_forwarding = true
 
   ip_configuration {
@@ -339,15 +333,15 @@ resource "azurerm_network_interface" "spoke2-nic" {
     public_ip_address_id          = azurerm_public_ip.spoke-2-public-ip.id
   }
 
-  tags = {
-    environment = local.prefix-spoke2
-  }
+#   tags = {
+#     environment = local.prefix-spoke2
+#   }
 }
 
 resource "azurerm_virtual_machine" "spoke2-vm" {
   name                  = "${local.prefix-spoke2}-vm"
-  location              = azurerm_resource_group.spoke2-vnet-rg.location
-  resource_group_name   = azurerm_resource_group.spoke2-vnet-rg.name
+  location              = var.location
+  resource_group_name   = var.spoke2_vnet_resource_group_name
   network_interface_ids = [azurerm_network_interface.spoke2-nic.id]
   vm_size               = var.vmsize
 
@@ -359,7 +353,7 @@ resource "azurerm_virtual_machine" "spoke2-vm" {
   }
 
   storage_os_disk {
-    name              = "myosdisk1"
+    name              = "${local.prefix-spoke2}-disk"
     caching           = "ReadWrite"
     create_option     = "FromImage"
     managed_disk_type = "Standard_LRS"
@@ -375,7 +369,7 @@ resource "azurerm_virtual_machine" "spoke2-vm" {
     disable_password_authentication = false
   }
 
-  tags = {
-    environment = local.prefix-spoke2
-  }
+#   tags = {
+#     environment = local.prefix-spoke2
+#   }
 }
