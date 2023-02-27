@@ -2,7 +2,7 @@ locals {
   hub-gateway   = "hub-gateway"
   prefix-spoke1 = "spoke1"
   prefix-spoke2 = "spoke2"
-default_tags = {
+  default_tags = {
     Environment = terraform.workspace
     Project     = var.project
     Owner       = var.contact

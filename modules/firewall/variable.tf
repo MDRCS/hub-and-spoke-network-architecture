@@ -1,12 +1,11 @@
 locals {
-  prefix      = "az-firewall"
-default_tags = {
+  prefix = "az-firewall"
+  default_tags = {
     Environment = terraform.workspace
     Project     = var.project
     Owner       = var.contact
     ManagedBy   = "Terraform"
   }
-
 }
 variable "project" {
   default = "hub-spoke-network-architecture"

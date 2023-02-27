@@ -54,20 +54,20 @@ resource "azurerm_resource_group" "spoke2-vnet-rg" {
 }
 
 module "firewall" {
-  source              = "./modules/firewall"
+  source                          = "./modules/firewall"
   hub_vnet_resource_group_name    = azurerm_resource_group.hub-vnet-rg.name
   spoke1_vnet_resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
   spoke2_vnet_resource_group_name = azurerm_resource_group.spoke2-vnet-rg.name
-  location            = var.location
+  location                        = var.location
   my_ip                           = data.external.my_ip.result.ip
 }
 
 module "vpn_gateway" {
-  source                       = "./modules/vpn_gateway"
+  source                          = "./modules/vpn_gateway"
   hub_vnet_resource_group_name    = azurerm_resource_group.hub-vnet-rg.name
   spoke1_vnet_resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
   spoke2_vnet_resource_group_name = azurerm_resource_group.spoke2-vnet-rg.name
-  location                     = var.location
+  location                        = var.location
 }
 
 module "virtual_network" {

@@ -3,7 +3,7 @@ resource "azurerm_public_ip" "hub-vpn-gateway-public-ip" {
   name                = "${local.hub-vpn-gateway}-public-ip"
   resource_group_name = var.hub_vnet_resource_group_name
   location            = var.location
-  allocation_method = "Dynamic"
+  allocation_method   = "Dynamic"
 
   tags = merge(
     tomap({ ResourceGroupe = var.hub_vnet_resource_group_name }),
@@ -15,8 +15,8 @@ resource "azurerm_virtual_network_gateway" "hub-vnet-gateway" {
   name                = "${local.hub-vpn-gateway}-vnet"
   resource_group_name = var.hub_vnet_resource_group_name
   location            = var.location
-  type     = "Vpn"
-  vpn_type = "RouteBased"
+  type                = "Vpn"
+  vpn_type            = "RouteBased"
 
   active_active = false
   enable_bgp    = false

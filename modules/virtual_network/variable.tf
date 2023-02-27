@@ -1,8 +1,8 @@
 locals {
-  prefix-hub         = "hub"
-  prefix-spoke1         = "spoke1"
-  prefix-spoke2         = "spoke2"
-default_tags = {
+  prefix-hub    = "hub"
+  prefix-spoke1 = "spoke1"
+  prefix-spoke2 = "spoke2"
+  default_tags = {
     Environment = terraform.workspace
     Project     = var.project
     Owner       = var.contact

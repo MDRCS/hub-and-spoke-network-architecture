@@ -1,6 +1,6 @@
 locals {
-  hub-vpn-gateway         = "hub-vpn-gateway"
-  shared-key         = "4-v3ry-53cr37-1p53c-5h4r3d-k3y"
+  hub-vpn-gateway = "hub-vpn-gateway"
+  shared-key      = "4-v3ry-53cr37-1p53c-5h4r3d-k3y"
 
   default_tags = {
     Environment = terraform.workspace
