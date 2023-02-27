@@ -4,6 +4,11 @@ resource "azurerm_public_ip" "hub-vpn-gateway-public-ip" {
   resource_group_name = var.hub_vnet_resource_group_name
   location            = var.location
   allocation_method = "Dynamic"
+
+  tags = merge(
+    tomap({ ResourceGroupe = var.hub_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_virtual_network_gateway" "hub-vnet-gateway" {
@@ -21,7 +26,12 @@ resource "azurerm_virtual_network_gateway" "hub-vnet-gateway" {
     name                          = "vnetGatewayConfig"
     public_ip_address_id          = azurerm_public_ip.hub-vpn-gateway-public-ip.id
     private_ip_address_allocation = "Dynamic"
-    subnet_id                     = azurerm_subnet.hub-gateway-subnet.id
+    subnet_id                     = module.network.hub_vnet_gateway_subnet_id
   }
   depends_on = [azurerm_public_ip.hub-vpn-gateway-public-ip]
+
+  tags = merge(
+    tomap({ ResourceGroupe = var.hub_vnet_resource_group_name }),
+    local.default_tags
+  )
 }

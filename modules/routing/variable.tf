@@ -2,11 +2,29 @@ locals {
   hub-gateway   = "hub-gateway"
   prefix-spoke1 = "spoke1"
   prefix-spoke2 = "spoke2"
+default_tags = {
+    Environment = terraform.workspace
+    Project     = var.project
+    Owner       = var.contact
+    ManagedBy   = "Terraform"
+  }
+
+}
+variable "project" {
+  default = "hub-spoke-network-architecture"
+}
+
+variable "contact" {
+  default = "elrahali.md@gmail.com"
 }
 
 
 variable "hub_nva_resource_group_name" {
   description = "Hub NVA Resource Group Name"
+}
+
+variable "hub_vnet_resource_group_name" {
+  description = "Hub VNET Resource Group Name"
 }
 
 variable "spoke1_vnet_resource_group_name" {

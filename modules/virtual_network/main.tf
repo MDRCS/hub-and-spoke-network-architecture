@@ -5,40 +5,41 @@ resource "azurerm_virtual_network" "hub-vnet" {
   location            = var.location
   address_space       = ["10.0.0.0/16"]
 
-#   tags = {
-#     environment = "hub-spoke"
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.hub_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
 
-resource "azurerm_subnet" "hub-gateway-subnet" {
+resource "azurerm_subnet" "hub_vnet_gateway" {
   name                 = "GatewaySubnet"
   resource_group_name  = var.hub_vnet_resource_group_name
   virtual_network_name = azurerm_virtual_network.hub-vnet.name
   address_prefixes     = ["10.0.0.0/27"]
 }
 
-resource "azurerm_subnet" "hub_firewall" {
+resource "azurerm_subnet" "hub_vnet_firewall" {
   name                 = "AzureFirewallSubnet"
   resource_group_name  = var.hub_vnet_resource_group_name
   virtual_network_name = azurerm_virtual_network.hub-vnet.name
   address_prefixes     = ["10.0.3.0/26"]
 }
 
-resource "azurerm_subnet" "hub_firewall_mgmt" {
+resource "azurerm_subnet" "hub_vnet_firewall_mgmt" {
   name                 = "AzureFirewallManagementSubnet"
   resource_group_name  = var.hub_vnet_resource_group_name
   virtual_network_name = azurerm_virtual_network.hub-vnet.name
   address_prefixes     = ["10.0.5.0/26"]
 }
 
-resource "azurerm_subnet" "hub-mgmt" {
+resource "azurerm_subnet" "hub_vnet_mgmt" {
   name                 = "mgmt"
   resource_group_name  = var.hub_vnet_resource_group_name
   virtual_network_name = azurerm_virtual_network.hub-vnet.name
   address_prefixes     = ["10.0.1.0/24"]
 }
 
-resource "azurerm_subnet" "hub-dmz" {
+resource "azurerm_subnet" "hub_vnet_dmz" {
   name                 = "dmz"
   resource_group_name  = var.hub_vnet_resource_group_name
   virtual_network_name = azurerm_virtual_network.hub-vnet.name
@@ -54,9 +55,10 @@ resource "azurerm_virtual_network" "spoke1-vnet" {
   location            = var.location
   address_space       = ["10.1.0.0/16"]
 
-#   tags = {
-#     environment = local.prefix-spoke1
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.spoke1_vnet_resource_group_name  }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_subnet" "spoke1-mgmt" {
@@ -81,9 +83,10 @@ resource "azurerm_virtual_network" "spoke2-vnet" {
   location            = var.location
   address_space       = ["10.2.0.0/16"]
 
-#   tags = {
-#     environment = local.prefix-spoke2
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.spoke2_vnet_resource_group_name  }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_subnet" "spoke2-mgmt" {

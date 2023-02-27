@@ -1,7 +1,21 @@
 locals {
-  hub       = "hub"
+  prefix-hub       = "hub"
   prefix-spoke1         = "spoke1"
   prefix-spoke2         = "spoke2"
+default_tags = {
+    Environment = terraform.workspace
+    Project     = var.project
+    Owner       = var.contact
+    ManagedBy   = "Terraform"
+  }
+
+}
+variable "project" {
+  default = "hub-spoke-network-architecture"
+}
+
+variable "contact" {
+  default = "elrahali.md@gmail.com"
 }
 
 variable "hub_vnet_resource_group_name" {

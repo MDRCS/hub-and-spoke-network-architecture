@@ -15,21 +15,23 @@ resource "azurerm_network_interface" "hub-nva-nic" {
 
   ip_configuration {
     name                          = local.prefix-hub-nva
-    subnet_id                     = azurerm_subnet.hub-dmz.id
+    subnet_id                     = module.network.hub_vnet_dmz_subnet_id
     private_ip_address_allocation = "Static"
     private_ip_address            = "10.0.2.36"
-    public_ip_address_id          = azurerm_public_ip.hub-public-ip.id
+    public_ip_address_id          = azurerm_public_ip.hub-nva-public-ip.id
   }
 
-#   tags = {
-#     environment = local.prefix-hub-nva
-#   }
+  tags = merge(
+    tomap({ ResourceGroupe = var.hub_nva_resource_group_name }),
+    local.default_tags
+  )
 }
+
 
 # Create Network Security Group and rule
 resource "azurerm_network_security_group" "hub-nva-nsg" {
   name                = "${local.prefix-hub-nva}-nsg"
-  resource_group_name = var.hub_nva_resource_group_name
+  resource_group_name = var.hub_vnet_resource_group_name
   location             = var.location
 
   security_rule {
@@ -57,13 +59,14 @@ resource "azurerm_network_security_group" "hub-nva-nsg" {
     destination_address_prefix = var.my_ip
   }
 
-#   tags = {
-#     environment = local.prefix-hub-nva
-#   }
-}
+tags = merge(
+    tomap({ ResourceGroupe = var.hub_nva_resource_group_name }),
+    local.default_tags
+  )
+} 
 
 resource "azurerm_subnet_network_security_group_association" "mgmt-nsg-association" {
-  subnet_id                 = azurerm_subnet.hub-nva-mgmt.id
+  subnet_id                 = module.network.hub_vnet_mgmt_id
   network_security_group_id = azurerm_network_security_group.hub-nva-nsg.id
 }
 
@@ -98,9 +101,10 @@ resource "azurerm_virtual_machine" "hub-nva-vm" {
     disable_password_authentication = false
   }
 
-#   tags = {
-#     environment = local.prefix-hub-nva
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.hub_nva_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_virtual_machine_extension" "enable-routes" {
@@ -120,9 +124,10 @@ resource "azurerm_virtual_machine_extension" "enable-routes" {
     }
 SETTINGS
 
-#   tags = {
-#     environment = local.prefix-hub-nva
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.hub_nva_resource_group_name }),
+    local.default_tags
+  )
 }
 
 # Hub VNET -> Network Security Group, Public IP, Network Interface and Virtual Machine.
@@ -134,14 +139,17 @@ resource "azurerm_network_interface" "hub-vnet-nic" {
 
   ip_configuration {
     name                          = local.prefix-hub-vnet
-    subnet_id                     = azurerm_subnet.hub-mgmt.id
+    subnet_id                     = module.network.hub_vnet_mgmt_id
     private_ip_address_allocation = "Dynamic"
   }
 
-#   tags = {
-#     environment = local.prefix-hub
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.hub_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
+
+
 
 #Virtual Machine
 resource "azurerm_virtual_machine" "hub-vnet-vm" {
@@ -175,9 +183,10 @@ resource "azurerm_virtual_machine" "hub-vnet-vm" {
     disable_password_authentication = false
   }
 
-#   tags = {
-#     environment = local.prefix-hub
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.hub_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
 
 
@@ -198,10 +207,15 @@ resource "azurerm_network_interface" "spoke1-nic" {
 
   ip_configuration {
     name                          = local.prefix-spoke1
-    subnet_id                     = azurerm_subnet.spoke1-mgmt.id
+    subnet_id                     = module.network.spoke1_mgmt_subnet_id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.spoke-1-public-ip.id
   }
+  
+  tags = merge(
+    tomap({ ResourceGroupe = var.spoke1_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_network_security_group" "spoke-1-nsg" {
@@ -235,9 +249,10 @@ resource "azurerm_network_security_group" "spoke-1-nsg" {
     destination_address_prefix = var.my_ip
   }
 
-#   tags = {
-#     environment = local.prefix-spoke1
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.spoke1_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_virtual_machine" "spoke1-vm" {
@@ -271,9 +286,10 @@ resource "azurerm_virtual_machine" "spoke1-vm" {
     disable_password_authentication = false
   }
 
-#   tags = {
-#     environment = local.prefix-spoke1
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.spoke1_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
 
 
@@ -308,9 +324,10 @@ resource "azurerm_network_security_group" "spoke-2-nsg" {
     destination_address_prefix = var.my_ip
   }
 
-#   tags = {
-#     environment = local.prefix-spoke2
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.spoke2_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_public_ip" "spoke-2-public-ip" {
@@ -328,14 +345,15 @@ resource "azurerm_network_interface" "spoke2-nic" {
 
   ip_configuration {
     name                          = local.prefix-spoke2
-    subnet_id                     = azurerm_subnet.spoke2-mgmt.id
+    subnet_id                     = module.network.spoke2_mgmt_subnet_id
     private_ip_address_allocation = "Dynamic"
     public_ip_address_id          = azurerm_public_ip.spoke-2-public-ip.id
   }
 
-#   tags = {
-#     environment = local.prefix-spoke2
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.spoke2_vnet_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_virtual_machine" "spoke2-vm" {
@@ -369,7 +387,8 @@ resource "azurerm_virtual_machine" "spoke2-vm" {
     disable_password_authentication = false
   }
 
-#   tags = {
-#     environment = local.prefix-spoke2
-#   }
+tags = merge(
+    tomap({ ResourceGroupe = var.spoke2_vnet_resource_group_name }),
+    local.default_tags
+  )
 }

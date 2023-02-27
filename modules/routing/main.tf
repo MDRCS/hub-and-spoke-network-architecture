@@ -36,9 +36,9 @@ resource "azurerm_route_table" "hub-gateway-rt" {
 }
 
 resource "azurerm_subnet_route_table_association" "hub-gateway-rt-hub-vnet-gateway-subnet" {
-  subnet_id      = azurerm_subnet.hub-gateway-subnet.id
+  subnet_id      = module.network.hub_vnet_gateway_subnet_id
   route_table_id = azurerm_route_table.hub-gateway-rt.id
-  depends_on     = [azurerm_subnet.hub-gateway-subnet]
+  depends_on     = [module.network.hub_gateway_subnet]
 }
 
 resource "azurerm_route_table" "spoke1-rt" {
@@ -66,15 +66,15 @@ resource "azurerm_route_table" "spoke1-rt" {
 }
 
 resource "azurerm_subnet_route_table_association" "spoke1-rt-spoke1-vnet-mgmt" {
-  subnet_id      = azurerm_subnet.spoke1-mgmt.id
+  subnet_id      = module.network.spoke1_mgmt_subnet_id
   route_table_id = azurerm_route_table.spoke1-rt.id
-  depends_on     = [azurerm_subnet.spoke1-mgmt]
+  depends_on     = [module.network.spoke1_mgmt_subnet]
 }
 
 resource "azurerm_subnet_route_table_association" "spoke1-rt-spoke1-vnet-workload" {
-  subnet_id      = azurerm_subnet.spoke1-workload.id
+  subnet_id      = module.network.spoke1_workload_subnet_id
   route_table_id = azurerm_route_table.spoke1-rt.id
-  depends_on     = [azurerm_subnet.spoke1-workload]
+  depends_on     = [module.network.spoke1_workload_subnet]
 }
 
 resource "azurerm_route_table" "spoke2-rt" {
@@ -102,13 +102,13 @@ resource "azurerm_route_table" "spoke2-rt" {
 }
 
 resource "azurerm_subnet_route_table_association" "spoke2-rt-spoke2-vnet-mgmt" {
-  subnet_id      = azurerm_subnet.spoke2-mgmt.id
+  subnet_id      = module.network.spoke2_mgmt_subnet_id
   route_table_id = azurerm_route_table.spoke2-rt.id
-  depends_on     = [azurerm_subnet.spoke2-mgmt]
+  depends_on     = [module.network.spoke2_mgmt_subnet]
 }
 
 resource "azurerm_subnet_route_table_association" "spoke2-rt-spoke2-vnet-workload" {
-  subnet_id      = azurerm_subnet.spoke2-workload.id
+  subnet_id      = module.network.spoke2_workload_subnet_id
   route_table_id = azurerm_route_table.spoke2-rt.id
-  depends_on     = [azurerm_subnet.spoke2-workload]
+  depends_on     = [module.network.spoke2_workload_subnet]
 }

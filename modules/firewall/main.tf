@@ -1,13 +1,13 @@
 
 resource "azurerm_firewall_policy" "fw_policy" {
   name                = "${local.prefix}-fw-policy"
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.hub_vnet_resource_group_name
   location            = var.location
 }
 
 resource "azurerm_public_ip" "fw_ip" {
   name                = "${local.prefix}-fw-ip"
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.hub_vnet_resource_group_name
   location            = var.location
   allocation_method   = "Static"
   sku                 = "Standard"
@@ -15,7 +15,7 @@ resource "azurerm_public_ip" "fw_ip" {
 
 resource "azurerm_public_ip" "fw-mgmt-ip" {
   name                = "${local.prefix}-fw-mgmt-ip"
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.hub_vnet_resource_group_name
   location            = var.location
   allocation_method   = "Static"
   sku                 = "Standard"
@@ -23,7 +23,7 @@ resource "azurerm_public_ip" "fw-mgmt-ip" {
 
 resource "azurerm_firewall" "fw" {
   name                = local.prefix
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.hub_vnet_resource_group_name
   location            = var.location
   firewall_policy_id  = azurerm_firewall_policy.fw_policy.id
   sku_name            = "AZFW_VNet"
@@ -31,13 +31,13 @@ resource "azurerm_firewall" "fw" {
 
   ip_configuration {
     name                 = "${local.prefix}-ipconfig"
-    subnet_id            = azurerm_subnet.hub_firewall.id
+    subnet_id            = module.network.hub_vnet_firewall_subnet_id
     public_ip_address_id = azurerm_public_ip.fw_ip.id
   }
 
   management_ip_configuration {
     name                 = "${local.prefix}-mgmt_ipconfig"
-    subnet_id            = azurerm_subnet.hub_firewall_mgmt.id
+    subnet_id            = module.network.hub_vnet_firewall_mgmt_subnet_id
     public_ip_address_id = azurerm_public_ip.fw-mgmt-ip.id
   }
 
@@ -96,7 +96,7 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw_rules_allow" {
     rule {
       name                  = "allow_hub_jumphost"
       protocols             = ["TCP", "UDP", "ICMP"]
-      source_addresses      = azurerm_subnet.hub-dmz.address_prefixes
+      source_addresses      = module.network.hub_vnet_dmz_subnet_address_prefixes
       destination_addresses = ["*"]
       destination_ports     = ["*"]
     }
@@ -104,16 +104,16 @@ resource "azurerm_firewall_policy_rule_collection_group" "fw_rules_allow" {
     rule {
       name                  = "allow_a_to_b_via_hub"
       protocols             = ["TCP", "UDP", "ICMP"]
-      source_addresses      = azurerm_subnet.spoke1-mgmt.address_prefixes
-      destination_addresses = azurerm_subnet.spoke2-mgmt.address_prefixes
+      source_addresses      = module.network.spoke1_mgmt_subnet_address_prefixes
+      destination_addresses = module.network.spoke2_mgmt_subnet_address_prefixes
       destination_ports     = ["*"]
     }
 
     rule {
       name                  = "allow_b_to_a_via_hub"
       protocols             = ["TCP", "UDP", "ICMP"]
-      source_addresses      = azurerm_subnet.spoke2-mgmt.address_prefixes
-      destination_addresses = azurerm_subnet.spoke1-mgmt.address_prefixes
+      source_addresses      = module.network.spoke2_mgmt_subnet_address_prefixes
+      destination_addresses = module.network.spoke1_mgmt_subnet_address_prefixes
       destination_ports     = ["*"]
     }
   }
