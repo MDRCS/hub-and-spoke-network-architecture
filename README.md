@@ -11,10 +11,7 @@
         To get started, we suggest creating a hub virtual network and one or more spoke virtual networks in separate subscriptions. You can then use Azure Firewall to manage traffic between the spokes, as well as implement security measures such as intrusion detection and prevention, and application-level filtering.
 
 
-sudo tcpdump icmp
 
-4.227.247.143
-10.1.0.68
-10.2.0.68
+## - Command to Capture Traffic to your network
 
-PasSWord-123
+        $ sudo tcpdump icmp
