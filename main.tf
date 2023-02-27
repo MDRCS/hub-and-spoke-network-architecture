@@ -53,13 +53,14 @@ resource "azurerm_resource_group" "spoke2-vnet-rg" {
   )
 }
 
-module "firewall" {
-  source                          = "./modules/firewall"
+
+
+module "virtual_network" {
+  source                          = "./modules/virtual_network"
   hub_vnet_resource_group_name    = azurerm_resource_group.hub-vnet-rg.name
   spoke1_vnet_resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
   spoke2_vnet_resource_group_name = azurerm_resource_group.spoke2-vnet-rg.name
   location                        = var.location
-  my_ip                           = data.external.my_ip.result.ip
 }
 
 module "vpn_gateway" {
@@ -70,25 +71,27 @@ module "vpn_gateway" {
   location                        = var.location
 }
 
-module "virtual_network" {
-  source                          = "./modules/virtual_network"
+module "routing" {
+  source                          = "./modules/routing"
+  hub_nva_resource_group_name     = azurerm_resource_group.hub-nva-rg.name
   hub_vnet_resource_group_name    = azurerm_resource_group.hub-vnet-rg.name
   spoke1_vnet_resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
   spoke2_vnet_resource_group_name = azurerm_resource_group.spoke2-vnet-rg.name
   location                        = var.location
+}
+
+
+module "firewall" {
+  source                          = "./modules/firewall"
+  hub_vnet_resource_group_name    = azurerm_resource_group.hub-vnet-rg.name
+  spoke1_vnet_resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
+  spoke2_vnet_resource_group_name = azurerm_resource_group.spoke2-vnet-rg.name
+  location                        = var.location
+  my_ip                           = data.external.my_ip.result.ip
 }
 
 module "virtual_network_peering" {
   source                          = "./modules/virtual_network_peering"
-  hub_vnet_resource_group_name    = azurerm_resource_group.hub-vnet-rg.name
-  spoke1_vnet_resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
-  spoke2_vnet_resource_group_name = azurerm_resource_group.spoke2-vnet-rg.name
-  location                        = var.location
-}
-
-module "routing" {
-  source                          = "./modules/routing"
-  hub_nva_resource_group_name     = azurerm_resource_group.hub-nva-rg.name
   hub_vnet_resource_group_name    = azurerm_resource_group.hub-vnet-rg.name
   spoke1_vnet_resource_group_name = azurerm_resource_group.spoke1-vnet-rg.name
   spoke2_vnet_resource_group_name = azurerm_resource_group.spoke2-vnet-rg.name

@@ -30,9 +30,10 @@ resource "azurerm_route_table" "hub-gateway-rt" {
     next_hop_type  = "Internet" # To Allow Hub to communicate with outside resources
   }
 
-  #   tags = {
-  #     environment = local.prefix-hub-nva
-  #   }
+  tags = merge(
+    tomap({ ResourceGroupe = var.hub_nva_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_subnet_route_table_association" "hub-gateway-rt-hub-vnet-gateway-subnet" {
@@ -60,9 +61,10 @@ resource "azurerm_route_table" "spoke1-rt" {
     next_hop_type  = "Internet" # To Allow Spoke 1 to communicate with outside resources
   }
 
-  #   tags = {
-  #     environment = local.prefix-hub-nva
-  #   }
+  tags = merge(
+    tomap({ ResourceGroupe = var.hub_nva_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_subnet_route_table_association" "spoke1-rt-spoke1-vnet-mgmt" {
@@ -96,9 +98,10 @@ resource "azurerm_route_table" "spoke2-rt" {
     next_hop_type  = "Internet" # To Allow Spoke 2 to communicate with outside resources
   }
 
-  #   tags = {
-  #     environment = local.prefix-hub-nva
-  #   }
+  tags = merge(
+    tomap({ ResourceGroupe = var.hub_nva_resource_group_name }),
+    local.default_tags
+  )
 }
 
 resource "azurerm_subnet_route_table_association" "spoke2-rt-spoke2-vnet-mgmt" {
